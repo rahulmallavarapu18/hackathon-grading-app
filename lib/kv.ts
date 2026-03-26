@@ -91,6 +91,12 @@ export async function deleteVote(id: string): Promise<void> {
   await kv.set(K.votes, ids.filter((v) => v !== id));
 }
 
+export async function deleteArchive(id: string): Promise<void> {
+  const summaries = await getArchiveSummaries();
+  await kv.del(K.archive(id));
+  await kv.set(K.archives, summaries.filter((a) => a.id !== id));
+}
+
 export async function resetCurrentData(): Promise<void> {
   const ids = (await kv.get<string[]>(K.projects)) ?? [];
   const voteIds = (await kv.get<string[]>(K.votes)) ?? [];

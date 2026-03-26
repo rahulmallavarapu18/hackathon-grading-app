@@ -88,6 +88,8 @@ export default function AdminPage() {
   const [archives, setArchives] = useState<ArchiveSummary[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
   const [deletingVoteId, setDeletingVoteId] = useState<string | null>(null);
+  const [deletingArchiveId, setDeletingArchiveId] = useState<string | null>(null);
+  const [deleteArchiveConfirm, setDeleteArchiveConfirm] = useState<string | null>(null);
 
   const [archiveName, setArchiveName] = useState('');
   const [archiving, setArchiving] = useState(false);
@@ -200,6 +202,14 @@ export default function AdminPage() {
       setArchiving(false);
       setTimeout(() => setActionMsg(''), 4000);
     }
+  };
+
+  const handleDeleteArchive = async (archiveId: string) => {
+    setDeletingArchiveId(archiveId);
+    await fetch(`/api/archives/${archiveId}`, { method: 'DELETE', headers: authHeader });
+    setDeleteArchiveConfirm(null);
+    await loadAll();
+    setDeletingArchiveId(null);
   };
 
   const handleDeleteVote = async (voteId: string) => {
@@ -557,12 +567,38 @@ export default function AdminPage() {
                           {archive.projectCount} projects · {archive.voteCount} votes
                         </div>
                       </div>
-                      <Link
-                        href={`/admin/archives/${archive.id}`}
-                        className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-sm transition-colors flex-shrink-0"
-                      >
-                        View →
-                      </Link>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Link
+                          href={`/admin/archives/${archive.id}`}
+                          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-sm transition-colors"
+                        >
+                          View →
+                        </Link>
+                        {deleteArchiveConfirm === archive.id ? (
+                          <>
+                            <button
+                              onClick={() => handleDeleteArchive(archive.id)}
+                              disabled={deletingArchiveId === archive.id}
+                              className="px-3 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-medium transition-colors disabled:opacity-40"
+                            >
+                              {deletingArchiveId === archive.id ? 'Deleting…' : 'Confirm'}
+                            </button>
+                            <button
+                              onClick={() => setDeleteArchiveConfirm(null)}
+                              className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-xs transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => setDeleteArchiveConfirm(archive.id)}
+                            className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl text-xs font-medium transition-colors"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
               </div>

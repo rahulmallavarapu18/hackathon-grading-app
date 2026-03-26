@@ -6,7 +6,7 @@ import Navigation from '@/components/Navigation';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'HackGrade — Hackathon Grading Platform',
+  title: 'Workato Hackathon',
   description: 'Submit and vote on hackathon projects',
 };
 
