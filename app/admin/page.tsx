@@ -10,17 +10,17 @@ function medal(rank: number) {
   return rank === 0 ? '🥇' : rank === 1 ? '🥈' : rank === 2 ? '🥉' : `#${rank + 1}`;
 }
 
-function ScoreBar({ score }: { score: number }) {
-  const pct = (score * 100).toFixed(1);
+function ScoreBar({ score, maxScore }: { score: number; maxScore: number }) {
+  const pct = maxScore > 0 ? (score / maxScore) * 100 : 0;
   return (
     <div className="flex items-center gap-3 flex-1">
       <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
         <div
           className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full transition-all"
-          style={{ width: `${score * 100}%` }}
+          style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="text-sm font-mono text-gray-300 w-14 text-right">{pct}%</span>
+      <span className="text-sm font-mono text-gray-300 w-16 text-right">{score} pts</span>
     </div>
   );
 }
@@ -37,8 +37,8 @@ function ScoresSection({ scores }: { scores: Scores | null }) {
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-6 text-sm text-gray-400 bg-gray-900 border border-gray-800 rounded-xl p-4">
-        <span>👤 Normal voters: <strong className="text-white">{scores.totalNormalVoters}</strong> (50% total weight)</span>
-        <span>⚖️ Judges: <strong className="text-white">{scores.totalJudges}</strong> (50% total weight)</span>
+        <span>👤 Normal voters: <strong className="text-white">{scores.totalNormalVoters}</strong> (1 pt each)</span>
+        <span>⚖️ Judges: <strong className="text-white">{scores.totalJudges}</strong> (5 pts each)</span>
       </div>
 
       {categories.map((cat) => {
@@ -57,9 +57,9 @@ function ScoresSection({ scores }: { scores: Scores | null }) {
                     <div className="font-medium text-white text-sm truncate">{item.projectName}</div>
                     <div className="text-xs text-gray-500 truncate">{item.teamName}</div>
                   </div>
-                  <ScoreBar score={item.score} />
+                  <ScoreBar score={item.score} maxScore={list[0]?.score ?? 1} />
                   <div className="text-xs text-gray-500 flex-shrink-0 w-36 text-right">
-                    {item.normalVotes} normal · {item.judgeVotes} judge
+                    {item.normalVotes}×1 + {item.judgeVotes}×5
                   </div>
                 </div>
               ))}
@@ -87,6 +87,7 @@ export default function AdminPage() {
   const [scores, setScores] = useState<Scores | null>(null);
   const [archives, setArchives] = useState<ArchiveSummary[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
+  const [deletingVoteId, setDeletingVoteId] = useState<string | null>(null);
 
   const [archiveName, setArchiveName] = useState('');
   const [archiving, setArchiving] = useState(false);
@@ -114,6 +115,27 @@ export default function AdminPage() {
     }
   }, []);
 
+  const SESSION_KEY = 'hackathon_admin_session';
+  const SESSION_TTL = 60 * 60 * 1000; // 1 hour in ms
+
+  // Restore session from localStorage on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (raw) {
+        const { password, expiresAt } = JSON.parse(raw);
+        if (expiresAt > Date.now()) {
+          setAdminPassword(password);
+          setAuthed(true);
+        } else {
+          localStorage.removeItem(SESSION_KEY);
+        }
+      }
+    } catch {
+      localStorage.removeItem(SESSION_KEY);
+    }
+  }, []);
+
   useEffect(() => {
     if (authed) loadAll();
   }, [authed, loadAll]);
@@ -129,6 +151,10 @@ export default function AdminPage() {
       setAdminPassword(pwInput);
       setAuthed(true);
       setPwError('');
+      localStorage.setItem(
+        SESSION_KEY,
+        JSON.stringify({ password: pwInput, expiresAt: Date.now() + SESSION_TTL })
+      );
     } else {
       setPwError('Incorrect password.');
     }
@@ -174,6 +200,13 @@ export default function AdminPage() {
       setArchiving(false);
       setTimeout(() => setActionMsg(''), 4000);
     }
+  };
+
+  const handleDeleteVote = async (voteId: string) => {
+    setDeletingVoteId(voteId);
+    await fetch(`/api/votes/${voteId}`, { method: 'DELETE', headers: authHeader });
+    await loadAll();
+    setDeletingVoteId(null);
   };
 
   const handleReset = async () => {
@@ -367,11 +400,13 @@ export default function AdminPage() {
                     <tr>
                       <th className="px-6 py-3 text-left">#</th>
                       <th className="px-6 py-3 text-left">Name</th>
+                      <th className="px-6 py-3 text-left">Email</th>
                       <th className="px-6 py-3 text-left">Type</th>
                       <th className="px-6 py-3 text-left">Most Innovative</th>
                       <th className="px-6 py-3 text-left">Best Business Value</th>
                       <th className="px-6 py-3 text-left">Most Liked</th>
                       <th className="px-6 py-3 text-left">Voted At</th>
+                      <th className="px-6 py-3 text-left"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-800">
@@ -384,6 +419,7 @@ export default function AdminPage() {
                           <tr key={v.id} className="hover:bg-gray-800/50">
                             <td className="px-6 py-4 text-gray-500">{i + 1}</td>
                             <td className="px-6 py-4 text-white font-medium">{v.voterName}</td>
+                            <td className="px-6 py-4 text-gray-400">{v.voterEmail}</td>
                             <td className="px-6 py-4">
                               <span
                                 className={`px-2 py-0.5 rounded text-xs font-medium ${
@@ -406,6 +442,15 @@ export default function AdminPage() {
                             </td>
                             <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
                               {new Date(v.votedAt).toLocaleString()}
+                            </td>
+                            <td className="px-6 py-4">
+                              <button
+                                onClick={() => handleDeleteVote(v.id)}
+                                disabled={deletingVoteId === v.id}
+                                className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg text-xs font-medium transition-colors disabled:opacity-40"
+                              >
+                                {deletingVoteId === v.id ? 'Deleting…' : 'Delete'}
+                              </button>
                             </td>
                           </tr>
                         );

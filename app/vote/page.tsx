@@ -13,7 +13,9 @@ export default function VotePage() {
 
   const [step, setStep] = useState<Step>('identity');
   const [voterName, setVoterName] = useState('');
+  const [voterEmail, setVoterEmail] = useState('');
   const [voterType, setVoterType] = useState<VoterType>('normal');
+  const [alreadyVotedPopup, setAlreadyVotedPopup] = useState(false);
 
   const [mostInnovative, setMostInnovative] = useState('');
   const [bestBusinessValue, setBestBusinessValue] = useState('');
@@ -54,6 +56,7 @@ export default function VotePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           voterName,
+          voterEmail,
           voterType,
           mostInnovative,
           bestBusinessValue,
@@ -63,6 +66,10 @@ export default function VotePage() {
 
       const data = await res.json();
       if (!res.ok) {
+        if (res.status === 409 && data.error === 'already_voted') {
+          setAlreadyVotedPopup(true);
+          return;
+        }
         setError(data.error ?? 'Something went wrong.');
         return;
       }
@@ -138,6 +145,20 @@ export default function VotePage() {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+              Your Email <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="email"
+              value={voterEmail}
+              onChange={(e) => setVoterEmail(e.target.value)}
+              placeholder="Enter your email address"
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+              required
+            />
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-300 mb-3">
               Voter Type <span className="text-red-400">*</span>
             </label>
@@ -167,6 +188,27 @@ export default function VotePage() {
             Continue to Voting →
           </button>
         </form>
+      </div>
+    );
+  }
+
+  // Already voted popup
+  if (alreadyVotedPopup) {
+    return (
+      <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+        <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
+          <div className="text-5xl mb-4">🗳️</div>
+          <h2 className="text-xl font-bold text-white mb-3">Already Voted</h2>
+          <p className="text-gray-300">
+            You have voted before already, thank you for your vote!
+          </p>
+          <button
+            onClick={() => setAlreadyVotedPopup(false)}
+            className="mt-6 px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl transition-colors"
+          >
+            Close
+          </button>
+        </div>
       </div>
     );
   }

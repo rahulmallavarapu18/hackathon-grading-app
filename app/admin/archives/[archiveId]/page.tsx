@@ -11,18 +11,17 @@ function medal(rank: number) {
   return rank === 0 ? '🥇' : rank === 1 ? '🥈' : rank === 2 ? '🥉' : `#${rank + 1}`;
 }
 
-function ScoreBar({ score }: { score: number }) {
+function ScoreBar({ score, maxScore }: { score: number; maxScore: number }) {
+  const pct = maxScore > 0 ? (score / maxScore) * 100 : 0;
   return (
     <div className="flex items-center gap-3 flex-1">
       <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
         <div
           className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"
-          style={{ width: `${score * 100}%` }}
+          style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="text-sm font-mono text-gray-300 w-14 text-right">
-        {(score * 100).toFixed(1)}%
-      </span>
+      <span className="text-sm font-mono text-gray-300 w-16 text-right">{score} pts</span>
     </div>
   );
 }
@@ -78,8 +77,8 @@ export default async function ArchivePage({
       <section className="mb-12">
         <h2 className="text-xl font-bold text-white mb-6">Final Results</h2>
         <div className="mb-4 flex items-center gap-6 text-sm text-gray-400 bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <span>👤 Normal voters: <strong className="text-white">{scores.totalNormalVoters}</strong></span>
-          <span>⚖️ Judges: <strong className="text-white">{scores.totalJudges}</strong></span>
+          <span>👤 Normal voters: <strong className="text-white">{scores.totalNormalVoters}</strong> (1 pt each)</span>
+          <span>⚖️ Judges: <strong className="text-white">{scores.totalJudges}</strong> (5 pts each)</span>
         </div>
 
         <div className="space-y-6">
@@ -97,9 +96,9 @@ export default async function ArchivePage({
                       <div className="font-medium text-white text-sm truncate">{item.projectName}</div>
                       <div className="text-xs text-gray-500 truncate">{item.teamName}</div>
                     </div>
-                    <ScoreBar score={item.score} />
+                    <ScoreBar score={item.score} maxScore={scores[cat.key][0]?.score ?? 1} />
                     <div className="text-xs text-gray-500 flex-shrink-0 w-36 text-right">
-                      {item.normalVotes} normal · {item.judgeVotes} judge
+                      {item.normalVotes}×1 + {item.judgeVotes}×5
                     </div>
                   </div>
                 ))}
@@ -119,6 +118,7 @@ export default async function ArchivePage({
                 <tr>
                   <th className="px-6 py-3 text-left">#</th>
                   <th className="px-6 py-3 text-left">Name</th>
+                  <th className="px-6 py-3 text-left">Email</th>
                   <th className="px-6 py-3 text-left">Type</th>
                   <th className="px-6 py-3 text-left">Most Innovative</th>
                   <th className="px-6 py-3 text-left">Best Business Value</th>
@@ -133,6 +133,7 @@ export default async function ArchivePage({
                     <tr key={v.id}>
                       <td className="px-6 py-4 text-gray-500">{i + 1}</td>
                       <td className="px-6 py-4 text-white font-medium">{v.voterName}</td>
+                      <td className="px-6 py-4 text-gray-400">{v.voterEmail}</td>
                       <td className="px-6 py-4">
                         <span
                           className={`px-2 py-0.5 rounded text-xs font-medium ${

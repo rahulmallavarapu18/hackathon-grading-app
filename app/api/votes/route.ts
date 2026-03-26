@@ -17,9 +17,9 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { voterName, voterType, mostInnovative, bestBusinessValue, mostLiked } = body;
+  const { voterName, voterEmail, voterType, mostInnovative, bestBusinessValue, mostLiked } = body;
 
-  if (!voterName?.trim() || !voterType || !mostInnovative || !bestBusinessValue || !mostLiked) {
+  if (!voterName?.trim() || !voterEmail?.trim() || !voterType || !mostInnovative || !bestBusinessValue || !mostLiked) {
     return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
   }
 
@@ -27,20 +27,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid voter type.' }, { status: 400 });
   }
 
+  const normalizedEmail = voterEmail.trim().toLowerCase();
+
   const votes = await getVotes();
-  const duplicate = votes.find(
-    (v) => v.voterName.toLowerCase() === voterName.trim().toLowerCase()
-  );
+  const duplicate = votes.find((v) => v.voterEmail.toLowerCase() === normalizedEmail);
   if (duplicate) {
-    return NextResponse.json(
-      { error: `"${voterName.trim()}" has already voted.` },
-      { status: 409 }
-    );
+    return NextResponse.json({ error: 'already_voted' }, { status: 409 });
   }
 
   const vote: Vote = {
     id: uuidv4(),
     voterName: voterName.trim(),
+    voterEmail: normalizedEmail,
     voterType,
     mostInnovative,
     bestBusinessValue,

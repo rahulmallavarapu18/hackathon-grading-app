@@ -13,6 +13,7 @@ export interface Project {
 export interface Vote {
   id: string;
   voterName: string;
+  voterEmail: string;
   voterType: 'normal' | 'judge';
   mostInnovative: string;
   bestBusinessValue: string;

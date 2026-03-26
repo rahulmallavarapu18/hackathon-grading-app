@@ -22,13 +22,13 @@ const INITIAL: FormData = {
   useCase: '',
 };
 
-const fields: { key: keyof Omit<FormData, 'teamMembers'>; label: string; hint: string; rows: number }[] = [
+const fields: { key: keyof Omit<FormData, 'teamMembers'>; label: string; hint: string; rows: number; maxLength?: number }[] = [
   { key: 'teamName', label: 'Team Name', hint: 'Your team or company name', rows: 1 },
   { key: 'projectName', label: 'Project Name', hint: 'What is your project called?', rows: 1 },
+  { key: 'useCase', label: 'Example Use Case', hint: 'A one-liner on what your solution does — e.g. "Automates invoice approvals by routing them to the right approver based on amount and department."', rows: 1, maxLength: 100 },
   { key: 'description', label: 'Project Description', hint: 'Give a clear overview of what your project does', rows: 4 },
   { key: 'innovative', label: 'Innovation', hint: 'Explain how your project is innovative — what makes it unique or novel?', rows: 4 },
   { key: 'businessValue', label: 'Business Value', hint: 'Explain how your project delivers business value — who benefits and how?', rows: 4 },
-  { key: 'useCase', label: 'Example Use Case', hint: 'Describe a user journey or workflow showing your project in action', rows: 5 },
 ];
 
 export default function SubmitPage() {
@@ -150,31 +150,42 @@ export default function SubmitPage() {
         </div>
 
         {/* Other fields */}
-        {fields.slice(1).map((field) => (
-          <div key={field.key}>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">
-              {field.label} <span className="text-red-400">*</span>
-            </label>
-            <p className="text-xs text-gray-500 mb-2">{field.hint}</p>
-            {field.rows === 1 ? (
-              <input
-                type="text"
-                value={form[field.key] as string}
-                onChange={(e) => updateField(field.key, e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
-                required
-              />
-            ) : (
-              <textarea
-                value={form[field.key] as string}
-                onChange={(e) => updateField(field.key, e.target.value)}
-                rows={field.rows}
-                className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors resize-none"
-                required
-              />
-            )}
-          </div>
-        ))}
+        {fields.slice(1).map((field) => {
+          const value = form[field.key] as string;
+          return (
+            <div key={field.key}>
+              <div className="flex items-baseline justify-between mb-1.5">
+                <label className="block text-sm font-medium text-gray-300">
+                  {field.label} <span className="text-red-400">*</span>
+                </label>
+                {field.maxLength && (
+                  <span className={`text-xs tabular-nums ${value.length > field.maxLength ? 'text-red-400' : 'text-gray-500'}`}>
+                    {value.length} / {field.maxLength}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mb-2">{field.hint}</p>
+              {field.rows === 1 ? (
+                <input
+                  type="text"
+                  value={value}
+                  onChange={(e) => updateField(field.key, e.target.value)}
+                  maxLength={field.maxLength}
+                  className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+                  required
+                />
+              ) : (
+                <textarea
+                  value={value}
+                  onChange={(e) => updateField(field.key, e.target.value)}
+                  rows={field.rows}
+                  className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors resize-none"
+                  required
+                />
+              )}
+            </div>
+          );
+        })}
 
         <button
           type="submit"

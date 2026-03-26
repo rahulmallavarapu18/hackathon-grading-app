@@ -28,6 +28,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
   }
 
+  if (useCase.trim().length > 100) {
+    return NextResponse.json({ error: 'Example Use Case must be 100 characters or fewer.' }, { status: 400 });
+  }
+
   const filtered = (teamMembers as string[]).filter((m) => m.trim());
   if (filtered.length === 0) {
     return NextResponse.json({ error: 'At least one team member is required.' }, { status: 400 });
