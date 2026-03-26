@@ -38,16 +38,19 @@ export default async function Home() {
       getProjects(),
       getVotes(),
     ]);
-  } catch {
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
     return (
       <div className="flex items-center justify-center min-h-[80vh] px-4">
-        <div className="text-center max-w-md">
+        <div className="text-center max-w-lg">
           <div className="text-5xl mb-4">⚠️</div>
-          <h2 className="text-xl font-semibold text-white mb-2">Database not connected</h2>
-          <p className="text-gray-400 text-sm">
-            Go to your Vercel project → <strong className="text-gray-300">Storage</strong> → create a{' '}
-            <strong className="text-gray-300">KV database</strong> and connect it to this project, then redeploy.
+          <h2 className="text-xl font-semibold text-white mb-2">Database connection error</h2>
+          <p className="text-gray-400 text-sm mb-3">
+            Check that your Redis environment variables are set in Vercel and redeploy.
           </p>
+          <pre className="text-left text-xs bg-gray-900 border border-gray-700 rounded-lg p-4 text-red-400 whitespace-pre-wrap break-all">
+            {msg}
+          </pre>
         </div>
       </div>
     );
