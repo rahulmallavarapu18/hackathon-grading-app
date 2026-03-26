@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface FormData {
@@ -36,6 +36,9 @@ export default function SubmitPage() {
   const [form, setForm] = useState<FormData>(INITIAL);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updateField = (key: keyof FormData, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -57,16 +60,41 @@ export default function SubmitPage() {
     }));
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setImageFile(file);
+    if (file) {
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImagePreview(null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
+      let imageUrl: string | undefined;
+
+      if (imageFile) {
+        const fd = new FormData();
+        fd.append('file', imageFile);
+        const uploadRes = await fetch('/api/upload', { method: 'POST', body: fd });
+        const uploadData = await uploadRes.json();
+        if (!uploadRes.ok) {
+          setError(uploadData.error ?? 'Image upload failed.');
+          setLoading(false);
+          return;
+        }
+        imageUrl = uploadData.url;
+      }
+
       const res = await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, imageUrl }),
       });
 
       const data = await res.json();
@@ -186,6 +214,49 @@ export default function SubmitPage() {
             </div>
           );
         })}
+
+        {/* Image upload */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-1.5">
+            Workflow Image <span className="text-gray-500">(optional)</span>
+          </label>
+          <p className="text-xs text-gray-500 mb-2">Upload a screenshot or diagram of your workflow. JPG, PNG, WebP or GIF, max 5 MB.</p>
+
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-gray-700 hover:border-purple-500 rounded-xl p-6 text-center cursor-pointer transition-colors"
+          >
+            {imagePreview ? (
+              <div className="space-y-3">
+                <img src={imagePreview} alt="Preview" className="max-h-48 mx-auto rounded-lg object-contain" />
+                <p className="text-xs text-gray-400">{imageFile?.name}</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="text-3xl">🖼️</div>
+                <p className="text-sm text-gray-400">Click to upload an image</p>
+              </div>
+            )}
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={handleImageChange}
+            className="hidden"
+          />
+
+          {imagePreview && (
+            <button
+              type="button"
+              onClick={() => { setImageFile(null); setImagePreview(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+              className="mt-2 text-xs text-red-400 hover:text-red-300 transition-colors"
+            >
+              Remove image
+            </button>
+          )}
+        </div>
 
         <button
           type="submit"

@@ -7,6 +7,7 @@ export interface Project {
   innovative: string;
   businessValue: string;
   useCase: string;
+  imageUrl?: string;
   submittedAt: number;
 }
 

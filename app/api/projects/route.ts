@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { teamName, teamMembers, projectName, description, innovative, businessValue, useCase } = body;
+  const { teamName, teamMembers, projectName, description, innovative, businessValue, useCase, imageUrl } = body;
 
   if (!teamName?.trim() || !teamMembers?.length || !projectName?.trim() || !description?.trim() || !innovative?.trim() || !businessValue?.trim() || !useCase?.trim()) {
     return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
     innovative: innovative.trim(),
     businessValue: businessValue.trim(),
     useCase: useCase.trim(),
+    ...(imageUrl ? { imageUrl } : {}),
     submittedAt: Date.now(),
   };
 

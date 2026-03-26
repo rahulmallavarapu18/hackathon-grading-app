@@ -62,6 +62,17 @@ export default function ProjectCard({ project, index }: Props) {
           </div>
         )}
 
+        {project.imageUrl && (
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-wider text-purple-400">Workflow</span>
+            <img
+              src={project.imageUrl}
+              alt="Workflow diagram"
+              className="mt-1.5 w-full rounded-lg border border-gray-800 object-contain max-h-64"
+            />
+          </div>
+        )}
+
         <button
           onClick={() => setExpanded(!expanded)}
           className="text-sm text-purple-400 hover:text-purple-300 transition-colors font-medium"
