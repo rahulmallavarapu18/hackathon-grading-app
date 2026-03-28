@@ -147,7 +147,7 @@ export default async function ArchivePage({
                       </td>
                       <td className="px-6 py-4 text-gray-300 max-w-[150px] truncate">{proj(v.mostInnovative)}</td>
                       <td className="px-6 py-4 text-gray-300 max-w-[150px] truncate">{proj(v.bestBusinessValue)}</td>
-                      <td className="px-6 py-4 text-gray-300 max-w-[150px] truncate">{proj(v.mostLiked)}</td>
+                      <td className="px-6 py-4 text-gray-300 max-w-[150px] truncate">{v.mostLiked ? proj(v.mostLiked) : '—'}</td>
                     </tr>
                   );
                 })}
