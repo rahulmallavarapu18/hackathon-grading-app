@@ -509,8 +509,8 @@ export default function AdminPage() {
                     {[...votes]
                       .sort((a, b) => a.votedAt - b.votedAt)
                       .map((v, i) => {
-                        const proj = (id: string) =>
-                          projects.find((p) => p.id === id)?.projectName ?? id.slice(0, 8);
+                        const proj = (id: string | undefined) =>
+                          id ? (projects.find((p) => p.id === id)?.projectName ?? id.slice(0, 8)) : '—';
                         return (
                           <tr key={v.id} className="hover:bg-gray-800/50">
                             <td className="px-6 py-4 text-gray-500">{i + 1}</td>

@@ -7,7 +7,7 @@ export function calculateScores(projects: Project[], votes: Vote[]): Scores {
   const normalVoters = votes.filter((v) => v.voterType === 'normal');
   const judges = votes.filter((v) => v.voterType === 'judge');
 
-  const calcCategory = (getter: (v: Vote) => string): CategoryScore[] =>
+  const calcCategory = (getter: (v: Vote) => string | undefined): CategoryScore[] =>
     projects
       .map((project) => {
         const nv = normalVoters.filter((v) => getter(v) === project.id).length;
